@@ -208,6 +208,9 @@ It is possible to force the import of files which weren't downloaded using the
         country.code3 = items[1]
         country.continent = items[8]
         country.tld = items[9][1:]  # strip the leading dot
+        country.currency_code = items[10]
+        country.currency_name = items[11]
+
         if items[16]:
             country.geoname_id = items[16]
         country.save()

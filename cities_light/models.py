@@ -99,6 +99,9 @@ class Country(Base):
         choices=CONTINENT_CHOICES)
     tld = models.CharField(max_length=5, blank=True, db_index=True)
 
+    currency_code = models.CharField(max_length=5, blank=True, db_index=True)
+    currency_name = models.CharField(max_length=15, blank=True)
+
     class Meta:
         verbose_name_plural = _(u'countries')
 signals.pre_save.connect(set_name_ascii, sender=Country)
