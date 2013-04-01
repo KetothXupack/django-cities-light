@@ -3,3 +3,7 @@
 *.egg-info
 build
 dist
+data
+*.iml
+*.ipr
+*.iws
