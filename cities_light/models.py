@@ -11,9 +11,10 @@ from south.modelsinspector import add_introspection_rules
 import autoslug
 
 from settings import *
+from cities_light.util import *
 
 __all__ = ['Country', 'Region', 'City', 'CONTINENT_CHOICES', 'to_search',
-    'to_ascii']
+           'to_ascii']
 
 ALPHA_REGEXP = re.compile('[\W_]+', re.UNICODE)
 
@@ -96,7 +97,7 @@ class Country(Base):
     code2 = models.CharField(max_length=2, null=True, blank=True, unique=True)
     code3 = models.CharField(max_length=3, null=True, blank=True, unique=True)
     continent = models.CharField(max_length=2, db_index=True,
-        choices=CONTINENT_CHOICES)
+                                 choices=CONTINENT_CHOICES)
     tld = models.CharField(max_length=5, blank=True, db_index=True)
 
     currency_code = models.CharField(max_length=5, blank=True, db_index=True)
@@ -104,6 +105,8 @@ class Country(Base):
 
     class Meta:
         verbose_name_plural = _(u'countries')
+
+
 signals.pre_save.connect(set_name_ascii, sender=Country)
 
 
@@ -115,7 +118,7 @@ class Region(Base):
     name = models.CharField(max_length=200, db_index=True)
     display_name = models.CharField(max_length=200)
     geoname_code = models.CharField(max_length=50, null=True, blank=True,
-        db_index=True)
+                                    db_index=True)
 
     country = models.ForeignKey(Country)
 
@@ -127,6 +130,7 @@ class Region(Base):
     def get_display_name(self):
         return u'%s, %s' % (self.name, self.country.name)
 
+
 signals.pre_save.connect(set_name_ascii, sender=Region)
 signals.pre_save.connect(set_display_name, sender=Region)
 
@@ -136,21 +140,23 @@ class ToSearchTextField(models.TextField):
     Trivial TextField subclass that passes values through to_search
     automatically.
     """
+
     def get_prep_lookup(self, lookup_type, value):
         """
         Return the value passed through to_search().
         """
         value = super(ToSearchTextField, self).get_prep_lookup(lookup_type,
-            value)
+                                                               value)
         return to_search(value)
 
     def south_field_triple(self):
-        "Returns a suitable description of this field for South."
+        """Returns a suitable description of this field for South."""
         from south.modelsinspector import introspector
+
         field_class = self.__class__.__module__ + "." + self.__class__.__name__
         args, kwargs = introspector(self)
         # That's our definition!
-        return (field_class, args, kwargs)
+        return field_class, args, kwargs
 
 
 class City(Base):
@@ -162,12 +168,12 @@ class City(Base):
     display_name = models.CharField(max_length=200)
 
     search_names = ToSearchTextField(max_length=4000,
-        db_index=INDEX_SEARCH_NAMES, blank=True, default='')
+                                     db_index=INDEX_SEARCH_NAMES, blank=True, default='')
 
     latitude = models.DecimalField(max_digits=8, decimal_places=5,
-        null=True, blank=True)
+                                   null=True, blank=True)
     longitude = models.DecimalField(max_digits=8, decimal_places=5,
-        null=True, blank=True)
+                                    null=True, blank=True)
 
     timezone = models.CharField(max_length=40, blank=True)
 
@@ -181,9 +187,11 @@ class City(Base):
     def get_display_name(self):
         if self.region_id:
             return u'%s, %s, %s' % (self.name, self.region.name,
-                self.country.name)
+                                    self.country.name)
         else:
             return u'%s, %s' % (self.name, self.country.name)
+
+
 signals.pre_save.connect(set_name_ascii, sender=City)
 signals.pre_save.connect(set_display_name, sender=City)
 
@@ -191,6 +199,8 @@ signals.pre_save.connect(set_display_name, sender=City)
 def city_country(sender, instance, **kwargs):
     if instance.region_id and not instance.country_id:
         instance.country = instance.region.country
+
+
 signals.pre_save.connect(city_country, sender=City)
 
 
@@ -223,4 +233,5 @@ def city_search_names(sender, instance, **kwargs):
                         search_names.append(name)
 
     instance.search_names = ' '.join(search_names)
+
 signals.pre_save.connect(city_search_names, sender=City)

@@ -1,8 +1,8 @@
 import os
-import os.path
 import logging
 import optparse
 import sys
+
 if sys.platform != 'win32':
     import resource
 
@@ -59,25 +59,19 @@ It is possible to force the import of files which weren't downloaded using the
 
     option_list = BaseCommand.option_list + (
         optparse.make_option('--force-import-all', action='store_true',
-            default=False, help='Import even if files are up-to-date.'
-        ),
+                             default=False, help='Import even if files are up-to-date.'),
         optparse.make_option('--force-all', action='store_true', default=False,
-            help='Download and import if files are up-to-date.'
-        ),
+                             help='Download and import if files are up-to-date.'),
         optparse.make_option('--force-import', action='append', default=[],
-            help='Import even if files matching files are up-to-date'
-        ),
+                             help='Import even if files matching files are up-to-date'),
         optparse.make_option('--force', action='append', default=[],
-            help='Download and import even if matching files are up-to-date'
-        ),
+                             help='Download and import even if matching files are up-to-date'),
         optparse.make_option('--noinsert', action='store_true',
-            default=False,
-            help='Update existing data only'
-        ),
+                             default=False,
+                             help='Update existing data only'),
         optparse.make_option('--hack-translations', action='store_true',
-            default=False,
-            help='Set this if you intend to import translations a lot'
-        ),
+                             default=False,
+                             help='Set this if you intend to import translations a lot'),
     )
 
     @transaction.commit_on_success
@@ -131,7 +125,7 @@ It is possible to force the import of files which weren't downloaded using the
 
                 i = 0
                 progress = progressbar.ProgressBar(maxval=geonames.num_lines(),
-                    widgets=self.widgets)
+                                                   widgets=self.widgets)
 
                 for items in geonames.parse():
                     if url in CITY_SOURCES:
@@ -168,9 +162,10 @@ It is possible to force the import of files which weren't downloaded using the
         self.translation_import()
 
     def _get_country_id(self, code2):
-        '''
+        """
         Simple lazy identity map for code2->country
-        '''
+        """
+
         if not hasattr(self, '_country_codes'):
             self._country_codes = {}
 
@@ -180,9 +175,10 @@ It is possible to force the import of files which weren't downloaded using the
         return self._country_codes[code2]
 
     def _get_region_id(self, country_code2, region_id):
-        '''
+        """
         Simple lazy identity map for (country_code2, region_id)->region
-        '''
+        """
+
         if not hasattr(self, '_region_codes'):
             self._region_codes = {}
 
@@ -236,7 +232,7 @@ It is possible to force the import of files which weren't downloaded using the
         else:
             try:
                 kwargs = dict(name=name,
-                    country_id=country_id)
+                              country_id=country_id)
             except Country.DoesNotExist:
                 if self.noinsert:
                     return
@@ -272,7 +268,7 @@ It is possible to force the import of files which weren't downloaded using the
             return
 
         try:
-            country_id = self._get_country_id(items[8])
+            self._get_country_id(items[8])
         except Country.DoesNotExist:
             if self.noinsert:
                 return
@@ -281,7 +277,7 @@ It is possible to force the import of files which weren't downloaded using the
 
         try:
             kwargs = dict(name=force_unicode(items[1]),
-                country_id=self._get_country_id(items[8]))
+                          country_id=self._get_country_id(items[8]))
         except Country.DoesNotExist:
             if self.noinsert:
                 return
@@ -340,10 +336,8 @@ It is possible to force the import of files which weren't downloaded using the
 
     def translation_parse(self, items):
         if not hasattr(self, 'translation_data'):
-            self.country_ids = Country.objects.values_list('geoname_id',
-                flat=True)
-            self.region_ids = Region.objects.values_list('geoname_id',
-                flat=True)
+            self.country_ids = Country.objects.values_list('geoname_id', flat=True)
+            self.region_ids = Region.objects.values_list('geoname_id', flat=True)
             self.city_ids = City.objects.values_list('geoname_id', flat=True)
 
             self.translation_data = {
@@ -385,12 +379,12 @@ It is possible to force the import of files which weren't downloaded using the
         if not data:
             return
 
-        max = 0
+        max_val = 0
         for model_class, model_class_data in data.items():
-            max += len(model_class_data.keys())
+            max_val += len(model_class_data.keys())
 
         i = 0
-        progress = progressbar.ProgressBar(maxval=max, widgets=self.widgets)
+        progress = progressbar.ProgressBar(maxval=max_val, widgets=self.widgets)
         for model_class, model_class_data in data.items():
             for geoname_id, geoname_data in model_class_data.items():
                 try:
