@@ -166,6 +166,8 @@ class City(Base):
     longitude = models.DecimalField(max_digits=8, decimal_places=5,
         null=True, blank=True)
 
+    timezone = models.CharField(max_length=40, blank=True)
+
     region = models.ForeignKey(Region, blank=True, null=True)
     country = models.ForeignKey(Country)
 
