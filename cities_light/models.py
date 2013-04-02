@@ -94,8 +94,8 @@ class Country(Base):
 
     name = models.CharField(max_length=200, unique=True)
 
-    code2 = models.CharField(_('ISO alpha-2'), max_length=2, null=True, blank=True, unique=True)
-    code3 = models.CharField(_('ISO alpha-3'), max_length=3, null=True, blank=True, unique=True)
+    code2 = models.CharField(_('ISO 3166-1 alpha-2'), max_length=2, null=True, blank=True, unique=True)
+    code3 = models.CharField(_('ISO 3166-1 alpha-3'), max_length=3, null=True, blank=True, unique=True)
     continent = models.CharField(max_length=2, db_index=True, choices=CONTINENT_CHOICES)
     tld = models.CharField(max_length=5, blank=True, db_index=True)
 
@@ -163,13 +163,10 @@ class City(Base):
     name = models.CharField(max_length=200, db_index=True)
     display_name = models.CharField(max_length=200)
 
-    search_names = ToSearchTextField(max_length=4000,
-                                     db_index=INDEX_SEARCH_NAMES, blank=True, default='')
+    search_names = ToSearchTextField(max_length=4000, db_index=INDEX_SEARCH_NAMES, blank=True, default='')
 
-    latitude = models.DecimalField(max_digits=8, decimal_places=5,
-                                   null=True, blank=True)
-    longitude = models.DecimalField(max_digits=8, decimal_places=5,
-                                    null=True, blank=True)
+    latitude = models.DecimalField(max_digits=8, decimal_places=5, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=8, decimal_places=5, null=True, blank=True)
 
     timezone = models.CharField(max_length=40, blank=True)
 
