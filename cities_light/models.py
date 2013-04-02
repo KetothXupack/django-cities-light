@@ -6,12 +6,11 @@ from django.db.models import signals
 from django.db import models
 from django.utils.translation import ugettext as _
 
-from south.modelsinspector import add_introspection_rules
+from south.modelsinspector import introspector
 
 import autoslug
 
 from settings import *
-from cities_light.util import *
 
 __all__ = ['Country', 'Region', 'City', 'CONTINENT_CHOICES', 'to_search',
            'to_ascii']
@@ -49,10 +48,11 @@ def to_search(value):
 
 def set_name_ascii(sender, instance=None, **kwargs):
     """
-    Signal reciever that sets instance.name_ascii from instance.name.
+    Signal receiver that sets instance.name_ascii from instance.name.
 
     Ascii versions of names are often useful for autocompletes and search.
     """
+
     name_ascii = to_ascii(instance.name)
     if name_ascii and not instance.name_ascii:
         instance.name_ascii = to_ascii(instance.name)
@@ -94,10 +94,9 @@ class Country(Base):
 
     name = models.CharField(max_length=200, unique=True)
 
-    code2 = models.CharField(max_length=2, null=True, blank=True, unique=True)
-    code3 = models.CharField(max_length=3, null=True, blank=True, unique=True)
-    continent = models.CharField(max_length=2, db_index=True,
-                                 choices=CONTINENT_CHOICES)
+    code2 = models.CharField(_('ISO alpha-2'), max_length=2, null=True, blank=True, unique=True)
+    code3 = models.CharField(_('ISO alpha-3'), max_length=3, null=True, blank=True, unique=True)
+    continent = models.CharField(max_length=2, db_index=True, choices=CONTINENT_CHOICES)
     tld = models.CharField(max_length=5, blank=True, db_index=True)
 
     currency_code = models.CharField(max_length=5, blank=True, db_index=True)
@@ -117,8 +116,7 @@ class Region(Base):
 
     name = models.CharField(max_length=200, db_index=True)
     display_name = models.CharField(max_length=200)
-    geoname_code = models.CharField(max_length=50, null=True, blank=True,
-                                    db_index=True)
+    geoname_code = models.CharField(max_length=50, null=True, blank=True, db_index=True)
 
     country = models.ForeignKey(Country)
 
@@ -145,13 +143,11 @@ class ToSearchTextField(models.TextField):
         """
         Return the value passed through to_search().
         """
-        value = super(ToSearchTextField, self).get_prep_lookup(lookup_type,
-                                                               value)
+        value = super(ToSearchTextField, self).get_prep_lookup(lookup_type, value)
         return to_search(value)
 
     def south_field_triple(self):
         """Returns a suitable description of this field for South."""
-        from south.modelsinspector import introspector
 
         field_class = self.__class__.__module__ + "." + self.__class__.__name__
         args, kwargs = introspector(self)

@@ -1,10 +1,8 @@
 import time
 import urllib
 import os
-import os.path
 import zipfile
 import logging
-import sys
 
 from .settings import *
 
@@ -18,8 +16,8 @@ class Geonames(object):
             os.mkdir(DATA_DIR)
 
         destination_file_name = url.split('/')[-1]
-        self.file_path = os.path.join(DATA_DIR,
-            destination_file_name)
+        self.file_path = \
+            os.path.join(DATA_DIR, destination_file_name)
 
         self.downloaded = self.download(url, self.file_path, force)
 
@@ -40,7 +38,7 @@ class Geonames(object):
     def download(self, url, path, force=False):
         remote_file = urllib.urlopen(url)
         remote_time = time.strptime(remote_file.headers['last-modified'],
-            '%a, %d %b %Y %H:%M:%S %Z')
+                                    '%a, %d %b %Y %H:%M:%S %Z')
         remote_size = int(remote_file.headers['content-length'])
 
         if os.path.exists(path) and not force:
@@ -73,10 +71,8 @@ class Geonames(object):
             zip_file.extract(file_name, DATA_DIR)
 
     def parse(self):
-        file = open(self.file_path, 'r')
-        line = True
-
-        for line in file:
+        f = open(self.file_path, 'r')
+        for line in f:
             line = line.strip()
 
             if len(line) < 1 or line[0] == '#':

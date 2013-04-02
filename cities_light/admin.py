@@ -5,7 +5,6 @@ from django.contrib.admin.views.main import ChangeList
 
 from .forms import *
 from .models import *
-from .settings import *
 
 
 class CountryAdmin(admin.ModelAdmin):

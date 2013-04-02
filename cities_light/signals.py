@@ -2,8 +2,8 @@
 Signals for this application.
 
 city_items_pre_import
-    Emited by city_import() in the cities_light command for each row parsed in
-    the data file. If a signal reciever raises InvalidItems then it will be
+    Emitted by city_import() in the cities_light command for each row parsed in
+    the data file. If a signal reliever raises InvalidItems then it will be
     skipped.
 
     An example is worth 1000 words: if you want to import only cities from
@@ -40,7 +40,7 @@ import django.dispatch
 from exceptions import *
 
 __all__ = ['city_items_pre_import', 'region_items_pre_import',
-    'filter_non_cities']
+           'filter_non_cities']
 
 city_items_pre_import = django.dispatch.Signal(providing_args=['items'])
 region_items_pre_import = django.dispatch.Signal(providing_args=['items'])

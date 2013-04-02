@@ -40,14 +40,14 @@ class CityResource(ModelResource):
         """
         if instance.region_id:
             return urlresolvers.reverse('cities_light_api_region_detail',
-                args=(instance.region.pk,))
+                                        args=(instance.region.pk,))
 
     def country(self, instance):
         """
         Return the country detail API url.
         """
         return urlresolvers.reverse('cities_light_api_country_detail',
-            args=(instance.country.pk,))
+                                    args=(instance.country.pk,))
 
 
 class RegionResource(ModelResource):
@@ -61,7 +61,7 @@ class RegionResource(ModelResource):
         Return the country detail API url.
         """
         return urlresolvers.reverse('cities_light_api_country_detail',
-            args=(instance.country.pk,))
+                                    args=(instance.country.pk,))
 
 
 class CountryResource(ModelResource):
@@ -101,8 +101,7 @@ class CitiesLightListModelView(ListModelView):
         """
         Allows a GET param, 'q', to be used against name_ascii.
         """
-        kwargs = super(ListModelView, self).get_query_kwargs(request, *args,
-            **kwargs)
+        kwargs = super(ListModelView, self).get_query_kwargs(request, *args, **kwargs)
         if 'q' in request.GET.keys():
             kwargs['name_ascii__icontains'] = request.GET['q']
 
@@ -118,43 +117,31 @@ class CityListModelView(CitiesLightListModelView):
         """
         Allows a GET param, 'q', to be used against search_names.
         """
-        kwargs = super(ListModelView, self).get_query_kwargs(request, *args,
-            **kwargs)
+        kwargs = super(ListModelView, self).get_query_kwargs(request, *args, **kwargs)
 
         if 'q' in request.GET.keys():
             kwargs['search_names__icontains'] = request.GET['q']
 
         return kwargs
 
+
 urlpatterns = patterns('',
-    url(
-        r'^city/$',
-        CityListModelView.as_view(resource=CityResource),
-        name='cities_light_api_city_list',
-    ),
-    url(
-        r'^city/(?P<pk>[^/]+)/$',
-        DetailView.as_view(resource=CityResource),
-        name='cities_light_api_city_detail',
-    ),
-    url(
-        r'^region/$',
-        CitiesLightListModelView.as_view(resource=RegionResource),
-        name='cities_light_api_region_list',
-    ),
-    url(
-        r'^region/(?P<pk>[^/]+)/$',
-        DetailView.as_view(resource=RegionResource),
-        name='cities_light_api_region_detail',
-    ),
-    url(
-        r'^country/$',
-        CitiesLightListModelView.as_view(resource=CountryResource),
-        name='cities_light_api_country_list',
-    ),
-    url(
-        r'^country/(?P<pk>[^/]+)/$',
-        DetailView.as_view(resource=CountryResource),
-        name='cities_light_api_country_detail',
-    ),
+                       url(r'^city/$',
+                           CityListModelView.as_view(resource=CityResource),
+                           name='cities_light_api_city_list'),
+                       url(r'^city/(?P<pk>[^/]+)/$',
+                           DetailView.as_view(resource=CityResource),
+                           name='cities_light_api_city_detail'),
+                       url(r'^region/$',
+                           CitiesLightListModelView.as_view(resource=RegionResource),
+                           name='cities_light_api_region_list'),
+                       url(r'^region/(?P<pk>[^/]+)/$',
+                           DetailView.as_view(resource=RegionResource),
+                           name='cities_light_api_region_detail'),
+                       url(r'^country/$',
+                           CitiesLightListModelView.as_view(resource=CountryResource),
+                           name='cities_light_api_country_list'),
+                       url(r'^country/(?P<pk>[^/]+)/$',
+                           DetailView.as_view(resource=CountryResource),
+                           name='cities_light_api_country_detail')
 )
