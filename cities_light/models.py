@@ -103,6 +103,7 @@ class Country(Base):
     currency_name = models.CharField(max_length=15, blank=True)
 
     population = models.IntegerField(null=False, blank=False, default=0)
+    languages = models.CharField(_('Comma-separated list of languages'), max_length=150, blank=True)
 
     class Meta:
         verbose_name_plural = _(u'countries')

@@ -207,6 +207,7 @@ It is possible to force the import of files which weren't downloaded using the
         country.currency_code = items[10]
         country.currency_name = items[11]
         country.population = int(items[7])
+        country.languages = items[15]
 
         if items[16]:
             country.geoname_id = items[16]
