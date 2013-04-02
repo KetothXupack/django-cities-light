@@ -102,6 +102,8 @@ class Country(Base):
     currency_code = models.CharField(max_length=5, blank=True, db_index=True)
     currency_name = models.CharField(max_length=15, blank=True)
 
+    population = models.IntegerField(null=False, blank=False, default=0)
+
     class Meta:
         verbose_name_plural = _(u'countries')
 
@@ -172,6 +174,8 @@ class City(Base):
 
     region = models.ForeignKey(Region, blank=True, null=True)
     country = models.ForeignKey(Country)
+
+    population = models.IntegerField(null=False, blank=False, default=0)
 
     class Meta:
         unique_together = (('region', 'name'),)

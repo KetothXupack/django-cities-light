@@ -206,6 +206,7 @@ It is possible to force the import of files which weren't downloaded using the
         country.tld = items[9][1:]  # strip the leading dot
         country.currency_code = items[10]
         country.currency_name = items[11]
+        country.population = int(items[7])
 
         if items[16]:
             country.geoname_id = items[16]
@@ -309,6 +310,9 @@ It is possible to force the import of files which weren't downloaded using the
         if not city.name_ascii:
             # useful for cities with chinese names
             city.name_ascii = items[2]
+
+        if not city.population:
+            city.population = int(items[14])
 
         if not city.latitude:
             city.latitude = items[4]
