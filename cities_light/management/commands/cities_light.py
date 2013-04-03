@@ -352,14 +352,16 @@ It is possible to force the import of files which weren't downloaded using the
                 City: {},
             }
 
+        lang = items[2]
         if not self.import_preferred_names:
             if len(items) > 4:
                 # avoid short names, colloquial, and historic
                 return
+            if lang not in TRANSLATION_LANGUAGES:
+                return
 
         # arg optimisation code kills me !!!
         geoname_id = int(items[1])
-        lang = items[2].lower()
 
         if geoname_id in self.country_ids:
             model_class = Country
