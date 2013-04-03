@@ -64,6 +64,8 @@ It is possible to force the import of files which weren't downloaded using the
                              help='Download and import if files are up-to-date.'),
         optparse.make_option('--force-import', action='append', default=[],
                              help='Import even if files matching files are up-to-date'),
+        optparse.make_option('--import-preferred-names', action='append', default=False,
+                             help='Import names tranlations'),
         optparse.make_option('--force', action='append', default=[],
                              help='Download and import even if matching files are up-to-date'),
         optparse.make_option('--noinsert', action='store_true',
@@ -83,6 +85,7 @@ It is possible to force the import of files which weren't downloaded using the
         translation_hack_path = os.path.join(DATA_DIR, 'translation_hack')
 
         self.noinsert = options.get('noinsert', False)
+        self.import_preferred_names = options.get('import-preferred-names', False)
         self.widgets = [
             'RAM used: ',
             MemoryUsageWidget(),
@@ -124,9 +127,7 @@ It is possible to force the import of files which weren't downloaded using the
                             continue
 
                 i = 0
-                progress = progressbar.ProgressBar(maxval=geonames.num_lines(),
-                                                   widgets=self.widgets)
-
+                progress = progressbar.ProgressBar(maxval=geonames.num_lines(), widgets=self.widgets)
                 for items in geonames.parse():
                     if url in CITY_SOURCES:
                         self.city_import(items)
@@ -351,32 +352,53 @@ It is possible to force the import of files which weren't downloaded using the
                 City: {},
             }
 
-        if len(items) > 4:
-            # avoid shortnames, colloquial, and historic
-            return
-
-        if items[2] not in TRANSLATION_LANGUAGES:
-            return
+        if not self.import_preferred_names:
+            if len(items) > 4:
+                # avoid short names, colloquial, and historic
+                return
 
         # arg optimisation code kills me !!!
-        items[1] = int(items[1])
+        geoname_id = int(items[1])
+        lang = items[2].lower()
 
-        if items[1] in self.country_ids:
+        if geoname_id in self.country_ids:
             model_class = Country
-        elif items[1] in self.region_ids:
+        elif geoname_id in self.region_ids:
             model_class = Region
-        elif items[1] in self.city_ids:
+        elif geoname_id in self.city_ids:
             model_class = City
         else:
             return
 
+        if len(items) > 4:
+            # find preferred lang
+            if self.import_preferred_names and lang in ISO3166_TO_ISO639.values() and items[4]:
+                try:
+                    model = model_class.objects.get(geoname_id=geoname_id)
+                    code = None
+                    if geoname_id in self.country_ids:
+                        code = model.code2.lower()
+                    elif geoname_id in self.region_ids or self.city_ids:
+                        code = model.country.code2.lower()
+
+                    if code in ISO3166_TO_ISO639 and lang == ISO3166_TO_ISO639[code]:
+                        model.preferred_name = items[3]
+                        model.save()
+                except model_class.DoesNotExist:
+                    pass
+            # avoid short names, colloquial, and historic
+            return
+
+        if lang not in TRANSLATION_LANGUAGES:
+            return
+
         if items[1] not in self.translation_data[model_class]:
-            self.translation_data[model_class][items[1]] = {}
+            self.translation_data[model_class][geoname_id] = {}
 
-        if items[2] not in self.translation_data[model_class][items[1]]:
-            self.translation_data[model_class][items[1]][items[2]] = []
+        if lang not in self.translation_data[model_class][geoname_id]:
+            self.translation_data[model_class][geoname_id][lang] = []
 
-        self.translation_data[model_class][items[1]][items[2]].append(items[3])
+        self.translation_data[model_class][geoname_id][lang].append(items[3])
 
     def translation_import(self):
         data = getattr(self, 'translation_data', None)
