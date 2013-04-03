@@ -342,9 +342,21 @@ It is possible to force the import of files which weren't downloaded using the
 
     def translation_parse(self, items):
         if not hasattr(self, 'translation_data'):
-            self.country_ids = Country.objects.values_list('geoname_id', flat=True)
-            self.region_ids = Region.objects.values_list('geoname_id', flat=True)
-            self.city_ids = City.objects.values_list('geoname_id', flat=True)
+            self.country_ids = set(Country.objects.values_list('geoname_id', flat=True))
+            self.region_ids = set(Region.objects.values_list('geoname_id', flat=True))
+            self.city_ids = set(City.objects.values_list('geoname_id', flat=True))
+
+            self.geoname_codes = {}
+            if self.import_preferred_names:
+                self.geoname_codes.update({k: v.lower()
+                                           for (k, v)
+                                           in Country.objects.values_list('geoname_id', 'code2')})
+                self.geoname_codes.update({k: v.lower()
+                                           for (k, v)
+                                           in Region.objects.values_list('geoname_id', 'country__code2')})
+                self.geoname_codes.update({k: v.lower()
+                                           for (k, v)
+                                           in City.objects.values_list('geoname_id', 'country__code2')})
 
             self.translation_data = {
                 Country: {},
@@ -372,29 +384,28 @@ It is possible to force the import of files which weren't downloaded using the
         else:
             return
 
-        if len(items) > 4:
+        if len(items) > 4 \
+            and items[4] \
+            and self.import_preferred_names:
+
             # find preferred lang
-            if self.import_preferred_names and lang in ISO3166_TO_ISO639.values() and items[4]:
+            code = self.geoname_codes[geoname_id]
+            if lang in ISO3166_TO_ISO639.values() \
+                and code in ISO3166_TO_ISO639 \
+                and lang == ISO3166_TO_ISO639[code]:
+
                 try:
                     model = model_class.objects.get(geoname_id=geoname_id)
-                    code = None
-                    if geoname_id in self.country_ids:
-                        code = model.code2.lower()
-                    elif geoname_id in self.region_ids or self.city_ids:
-                        code = model.country.code2.lower()
-
-                    if code in ISO3166_TO_ISO639 and lang == ISO3166_TO_ISO639[code]:
-                        model.preferred_name = items[3]
-                        model.save()
+                    model.preferred_name = items[3]
+                    model.save()
                 except model_class.DoesNotExist:
                     pass
-            # avoid short names, colloquial, and historic
             return
 
         if lang not in TRANSLATION_LANGUAGES:
             return
 
-        if items[1] not in self.translation_data[model_class]:
+        if geoname_id not in self.translation_data[model_class]:
             self.translation_data[model_class][geoname_id] = {}
 
         if lang not in self.translation_data[model_class][geoname_id]:
