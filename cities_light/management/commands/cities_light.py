@@ -384,20 +384,16 @@ It is possible to force the import of files which weren't downloaded using the
         else:
             return
 
-        if len(items) > 4 \
-            and items[4] \
-            and self.import_preferred_names:
-
+        if len(items) > 4 and self.import_preferred_names and lang in ISO3166_TO_ISO639.values():
             # find preferred lang
             code = self.geoname_codes[geoname_id]
-            if lang in ISO3166_TO_ISO639.values() \
-                and code in ISO3166_TO_ISO639 \
-                and lang == ISO3166_TO_ISO639[code]:
-
+            if  code in ISO3166_TO_ISO639 and lang == ISO3166_TO_ISO639[code]:
                 try:
                     model = model_class.objects.get(geoname_id=geoname_id)
-                    model.preferred_name = items[3]
-                    model.save()
+                    # save preferred name or not preferred if name is empty
+                    if items[4] or not model.preferred_name:
+                        model.preferred_name = items[3]
+                        model.save()
                 except model_class.DoesNotExist:
                     pass
             return
