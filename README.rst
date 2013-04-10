@@ -1,5 +1,3 @@
-.. image:: https://secure.travis-ci.org/yourlabs/django-cities-light.png?branch=master
-
 django-cities-light -- *Simple django-cities alternative*
 =========================================================
 
@@ -47,11 +45,19 @@ Data update
 
 Finally, populate your database with command::
 
-    ./manage.py cities_light
+    ./manage.py geonames
 
 This command is well documented, consult the help with::
 
-    ./manage.py help cities_light
+    ./manage.py help geonames
+
+For preferred name import use
+
+    ./manage.py help geonames --import-preferred-names
+
+or
+
+    ./manage.py help geonames --force-import=alternateNames --import-preferred-names
 
 Resources
 ---------

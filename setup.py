@@ -9,7 +9,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name='django-cities-light',
+    name='django-geonames',
     version='2.0.7',
     description='Simple alternative to django-cities',
     author='James Pic',
