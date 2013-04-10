@@ -1,3 +1,4 @@
+# coding=utf-8
 import os
 import logging
 import optparse
@@ -365,16 +366,15 @@ It is possible to force the import of files which weren't downloaded using the
             }
 
         lang = items[2]
-        if not self.import_preferred_names:
-            if len(items) > 4:
-                # avoid short names, colloquial, and historic
-                return
-            if lang not in TRANSLATION_LANGUAGES:
-                return
+
+        # avoid searches in sets if unnecessary
+        # avoid short names, colloquial, historic and unwanted names
+        if not self.import_preferred_names \
+                and (len(items) > 4 or lang not in TRANSLATION_LANGUAGES):
+            return
 
         # arg optimisation code kills me !!!
         geoname_id = int(items[1])
-
         if geoname_id in self.country_ids:
             model_class = Country
         elif geoname_id in self.region_ids:
@@ -384,21 +384,24 @@ It is possible to force the import of files which weren't downloaded using the
         else:
             return
 
-        if len(items) > 4 and self.import_preferred_names and lang in ISO3166_TO_ISO639.values():
+        if self.import_preferred_names:
             # find preferred lang
             code = self.geoname_codes[geoname_id]
-            if  code in ISO3166_TO_ISO639 and lang == ISO3166_TO_ISO639[code]:
+            if lang in ISO3166_TO_ISO639.values() \
+                and code in ISO3166_TO_ISO639 \
+                    and lang == ISO3166_TO_ISO639[code]:
+
                 try:
                     model = model_class.objects.get(geoname_id=geoname_id)
                     # save preferred name or not preferred if name is empty
-                    if items[4] or not model.preferred_name:
+                    if (len(items) > 4 and items[4]) or not model.preferred_name:
                         model.preferred_name = items[3]
                         model.save()
                 except model_class.DoesNotExist:
                     pass
-            return
 
-        if lang not in TRANSLATION_LANGUAGES:
+        # avoid short names, colloquial, historic and unwanted names
+        if len(items) > 4 or lang not in TRANSLATION_LANGUAGES:
             return
 
         if geoname_id not in self.translation_data[model_class]:
