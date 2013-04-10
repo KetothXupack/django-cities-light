@@ -164,6 +164,9 @@ It is possible to force the import of files which weren't downloaded using the
         self.logger.info('Importing parsed translation in the database')
         self.translation_import()
 
+        self.logger.info('Importing preferred names in the database')
+        self.preferred_names_import()
+
     def _get_country_id(self, code2):
         """
         Simple lazy identity map for code2->country
@@ -349,6 +352,8 @@ It is possible to force the import of files which weren't downloaded using the
             self.city_ids = set(City.objects.values_list('geoname_id', flat=True))
 
             self.geoname_codes = {}
+            from collections import defaultdict
+            self.preferred_names = defaultdict(lambda: {'pref': None, 'matching': {}})
             if self.import_preferred_names:
                 self.geoname_codes.update({k: v.lower()
                                            for (k, v)
@@ -392,14 +397,10 @@ It is possible to force the import of files which weren't downloaded using the
                 and code in ISO3166_TO_ISO639 \
                     and lang == ISO3166_TO_ISO639[code]:
 
-                try:
-                    model = model_class.objects.get(geoname_id=geoname_id)
-                    # save preferred name or not preferred if name is empty
-                    if (len(items) > 4 and items[4]) or not model.preferred_name:
-                        model.preferred_name = items[3]
-                        model.save()
-                except model_class.DoesNotExist:
-                    pass
+                if len(items) > 4 and items[4]:
+                    self.preferred_names[geoname_id]['pref'] = items[3]
+                else:
+                    self.preferred_names[geoname_id]['matching'][int(items[0])] = items[3]
 
         # avoid short names, colloquial, historic and unwanted names
         if len(items) > 4 or lang not in TRANSLATION_LANGUAGES:
@@ -462,3 +463,43 @@ It is possible to force the import of files which weren't downloaded using the
 
                 i += 1
                 progress.update(i)
+        progress.finish()
+
+    def preferred_names_import(self):
+        data = getattr(self, 'translation_data', None)
+
+        if not data:
+            return
+
+        i = 0
+        progress = progressbar.ProgressBar(maxval=len(self.preferred_names), widgets=self.widgets)
+        for geoname_id, names in self.preferred_names.items():
+            if geoname_id in self.country_ids:
+                model_class = Country
+            elif geoname_id in self.region_ids:
+                model_class = Region
+            elif geoname_id in self.city_ids:
+                model_class = City
+            else:
+                continue
+
+            try:
+                model = model_class.objects.get(geoname_id=geoname_id)
+            except model_class.DoesNotExist:
+                continue
+            save = False
+
+            if names['pref']:
+                model.preferred_name = names['pref']
+                save = True
+            elif names['matching']:
+                alt_name_id = max(names['matching'].keys())
+                model.preferred_name = names['matching'][alt_name_id]
+                save = True
+
+            if save:
+                model.save()
+
+            i += 1
+            progress.update(i)
+        progress.finish()
