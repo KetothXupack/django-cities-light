@@ -65,7 +65,10 @@ class Base(models.Model):
 
     preferred_name = models.CharField(_('Native name'), max_length=200, blank=True, db_index=True)
     update_preferred_name = models.BooleanField(_('Allow native name to be automatically updated'),
-                                                blank=False, default=True)
+                                                null=False, blank=False, default=True)
+
+    reg_enabled = models.BooleanField(_('Registration is enabled for this entity'),
+                                      null=False, blank=False, default=True)
 
     class Meta:
         abstract = True
