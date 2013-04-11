@@ -4,7 +4,7 @@ import autocomplete_light
 
 
 class CityAutocomplete(autocomplete_light.AutocompleteModelBase):
-    search_fields = ('search_names',)
+    search_fields = ('name', 'preferred_name')
 
 
 class RegionAutocomplete(autocomplete_light.AutocompleteModelBase):

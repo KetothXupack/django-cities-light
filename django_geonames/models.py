@@ -12,7 +12,7 @@ import autoslug
 
 from settings import *
 
-__all__ = ['Country', 'Region', 'City', 'CONTINENT_CHOICES', 'to_search',
+__all__ = ['Country', 'Region', 'City', 'CONTINENT_CHOICES',
            'to_ascii']
 
 ALPHA_REGEXP = re.compile('[\W_]+', re.UNICODE)
@@ -33,17 +33,6 @@ def to_ascii(value):
         value = force_unicode(value)
 
     return unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
-
-
-def to_search(value):
-    """
-    Convert a string value into a string that is usable against
-    City.search_names.
-
-    For example, 'Paris Texas' would become 'paristexas'.
-    """
-
-    return ALPHA_REGEXP.sub('', to_ascii(value)).lower()
 
 
 def set_name_ascii(sender, instance=None, **kwargs):
@@ -146,13 +135,6 @@ class ToSearchTextField(models.TextField):
     automatically.
     """
 
-    def get_prep_lookup(self, lookup_type, value):
-        """
-        Return the value passed through to_search().
-        """
-        value = super(ToSearchTextField, self).get_prep_lookup(lookup_type, value)
-        return to_search(value)
-
     def south_field_triple(self):
         """Returns a suitable description of this field for South."""
 
@@ -169,8 +151,6 @@ class City(Base):
 
     name = models.CharField(max_length=200, db_index=True)
     display_name = models.CharField(max_length=200)
-
-    search_names = ToSearchTextField(max_length=4000, db_index=INDEX_SEARCH_NAMES, blank=True, default='')
 
     latitude = models.DecimalField(max_digits=8, decimal_places=5, null=True, blank=True)
     longitude = models.DecimalField(max_digits=8, decimal_places=5, null=True, blank=True)
@@ -205,36 +185,3 @@ def city_country(sender, instance, **kwargs):
 
 
 signals.pre_save.connect(city_country, sender=City)
-
-
-def city_search_names(sender, instance, **kwargs):
-    search_names = []
-
-    country_names = [instance.country.name]
-    if instance.country.alternate_names:
-        country_names += instance.country.alternate_names.split(',')
-
-    city_names = [instance.name]
-    if instance.alternate_names:
-        city_names += instance.alternate_names.split(',')
-
-    if instance.region_id:
-        region_names = [instance.region.name]
-        if instance.region.alternate_names:
-            region_names += instance.region.alternate_names.split(',')
-
-    for city_name in city_names:
-        for country_name in country_names:
-            name = to_search(city_name + country_name)
-            if name not in search_names:
-                search_names.append(name)
-
-            if instance.region_id:
-                for region_name in region_names:
-                    name = to_search(city_name + region_name + country_name)
-                    if name not in search_names:
-                        search_names.append(name)
-
-    instance.search_names = ' '.join(search_names)
-
-signals.pre_save.connect(city_search_names, sender=City)

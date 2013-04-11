@@ -39,11 +39,6 @@ SOURCES
 DATA_DIR
     Absolute path to download and extract data into. Default is
     django_geonames/data. Overridable in settings.GEONAMES_DATA_DIR
-
-INDEX_SEARCH_NAMES
-    If your database engine for django_geonames supports indexing TextFields
-    (ie. it is **not** MySQL), then this should be set to True. You might
-    have to override this setting if using several databases for your project.
 """
 
 import os.path
@@ -56,7 +51,7 @@ def default(key, val):
 
 __all__ = ['COUNTRY_SOURCES', 'REGION_SOURCES', 'CITY_SOURCES',
            'TRANSLATION_LANGUAGES', 'TRANSLATION_SOURCES', 'SOURCES', 'DATA_DIR',
-           'INDEX_SEARCH_NAMES', 'ISO3166_TO_ISO639']
+           'ISO3166_TO_ISO639']
 
 COUNTRY_SOURCES = \
     default('CGEONAMES_COUNTRY_SOURCES', ['http://download.geonames.org/export/dump/countryInfo.txt'])
@@ -133,11 +128,3 @@ ISO3166_TO_ISO639 = default('GEONAMES_ISO3166_TO_ISO639', DEFAULT_ISO3166_TO_ISO
 DATA_DIR = getattr(settings, 'GEONAMES_DATA_DIR',
                    os.path.normpath(os.path.join(
                        os.path.dirname(os.path.realpath(__file__)), 'data')))
-
-# MySQL doesn't support indexing TextFields
-INDEX_SEARCH_NAMES = getattr(settings, 'GEONAMES_INDEX_SEARCH_NAMES', None)
-if INDEX_SEARCH_NAMES is None:
-    INDEX_SEARCH_NAMES = True
-    for database in settings.DATABASES.values():
-        if 'mysql' in database['ENGINE'].lower():
-            INDEX_SEARCH_NAMES = False

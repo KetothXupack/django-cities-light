@@ -120,7 +120,8 @@ class CityListModelView(CitiesLightListModelView):
         kwargs = super(ListModelView, self).get_query_kwargs(request, *args, **kwargs)
 
         if 'q' in request.GET.keys():
-            kwargs['search_names__icontains'] = request.GET['q']
+            kwargs['name__icontains'] = request.GET['q']
+            kwargs['preferred_name__icontains'] = request.GET['q']
 
         return kwargs
 

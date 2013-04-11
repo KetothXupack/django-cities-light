@@ -38,8 +38,10 @@ class CountryLookup(StandardLookupChannel):
 
     def get_query(self, q, request):
         return Country.objects.filter(
-            Q(name__icontains=q) |
-            Q(name_ascii__icontains=q)
+            Q(name__icontains=q)
+            | Q(name_ascii__icontains=q)
+            | Q(preferred_name__icontains=q)
+            | Q(display_name_ascii__icontains=q)
         ).distinct()
 
 
@@ -52,8 +54,10 @@ class RegionLookup(StandardLookupChannel):
 
     def get_query(self, q, request):
         return Region.objects.filter(
-            Q(name__icontains=q) |
-            Q(name_ascii__icontains=q)
+            Q(name__icontains=q)
+            | Q(name_ascii__icontains=q)
+            | Q(preferred_name__icontains=q)
+            | Q(display_name_ascii__icontains=q)
         ).distinct()
 
 
@@ -64,5 +68,9 @@ class CityLookup(StandardLookupChannel):
     model = City
 
     def get_query(self, q, request):
-        return City.objects.filter(search_names__icontains=q)\
-            .select_related('country').distinct()
+        return City.objects.filter(
+            Q(name__icontains=q)
+            | Q(name_ascii__icontains=q)
+            | Q(preferred_name__icontains=q)
+            | Q(display_name_ascii__icontains=q)
+        ).select_related('country').distinct()
