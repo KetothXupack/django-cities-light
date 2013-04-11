@@ -66,6 +66,8 @@ class Base(models.Model):
     slug = autoslug.AutoSlugField(populate_from='name_ascii')
     geoname_id = models.IntegerField(null=True, blank=True, unique=True)
 
+    update_preferred_name = models.BooleanField(null=False, blank=False, default=True)
+
     class Meta:
         abstract = True
         ordering = ['name']

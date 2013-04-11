@@ -152,8 +152,7 @@ It is possible to force the import of files which weren't downloaded using the
 
                 progress.finish()
 
-                if url in TRANSLATION_SOURCES and options.get(
-                        'hack_translations', False):
+                if url in TRANSLATION_SOURCES and options.get('hack_translations', False):
                     with open(translation_hack_path, 'w+') as f:
                         pickle.dump(self.translation_data, f)
 
@@ -429,6 +428,10 @@ It is possible to force the import of files which weren't downloaded using the
                 model = model_class.objects.get(geoname_id=geoname_id)
             except model_class.DoesNotExist:
                 continue
+
+            if not model.update_preferred_name:
+                continue
+
             save = False
 
             if names['pref']:
