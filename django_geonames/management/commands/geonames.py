@@ -161,9 +161,6 @@ It is possible to force the import of files which weren't downloaded using the
             with open(translation_hack_path, 'r') as f:
                 self.translation_data = pickle.load(f)
 
-        self.logger.info('Importing parsed translation in the database')
-        self.translation_import()
-
         self.logger.info('Importing preferred names in the database')
         self.preferred_names_import()
 
@@ -333,10 +330,6 @@ It is possible to force the import of files which weren't downloaded using the
             city.timezone = items[17]
             save = True
 
-        if not TRANSLATION_SOURCES and not city.alternate_names:
-            city.alternate_names = force_unicode(items[3])
-            save = True
-
         if not city.geoname_id:
             # city may have been added manually
             city.geoname_id = items[0]
@@ -413,57 +406,6 @@ It is possible to force the import of files which weren't downloaded using the
             self.translation_data[model_class][geoname_id][lang] = []
 
         self.translation_data[model_class][geoname_id][lang].append(items[3])
-
-    def translation_import(self):
-        data = getattr(self, 'translation_data', None)
-
-        if not data:
-            return
-
-        max_val = 0
-        for model_class, model_class_data in data.items():
-            max_val += len(model_class_data.keys())
-
-        i = 0
-        progress = progressbar.ProgressBar(maxval=max_val, widgets=self.widgets)
-        for model_class, model_class_data in data.items():
-            for geoname_id, geoname_data in model_class_data.items():
-                try:
-                    model = model_class.objects.get(geoname_id=geoname_id)
-                except model_class.DoesNotExist:
-                    continue
-                save = False
-
-                if not model.alternate_names:
-                    alternate_names = []
-                else:
-                    alternate_names = model.alternate_names.split(',')
-
-                for lang, names in geoname_data.items():
-                    if lang == 'post':
-                        # we might want to save the postal codes somewhere
-                        # here's where it will all start ...
-                        continue
-
-                    for name in names:
-                        name = force_unicode(name)
-                        if name == model.name:
-                            continue
-
-                        if name not in alternate_names:
-                            alternate_names.append(name)
-
-                alternate_names = u','.join(alternate_names)
-                if model.alternate_names != alternate_names:
-                    model.alternate_names = alternate_names
-                    save = True
-
-                if save:
-                    model.save()
-
-                i += 1
-                progress.update(i)
-        progress.finish()
 
     def preferred_names_import(self):
         data = getattr(self, 'translation_data', None)
