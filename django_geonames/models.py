@@ -10,8 +10,6 @@ from south.modelsinspector import introspector
 
 import autoslug
 
-from settings import *
-
 __all__ = ['Country', 'Region', 'City', 'CONTINENT_CHOICES',
            'to_ascii']
 
@@ -61,12 +59,13 @@ class Base(models.Model):
     """
 
     name_ascii = models.CharField(max_length=200, blank=True, db_index=True)
-    preferred_name = models.CharField(max_length=200, blank=True, db_index=True)
 
     slug = autoslug.AutoSlugField(populate_from='name_ascii')
     geoname_id = models.IntegerField(null=True, blank=True, unique=True)
 
-    update_preferred_name = models.BooleanField(null=False, blank=False, default=True)
+    preferred_name = models.CharField(_('Native name'), max_length=200, blank=True, db_index=True)
+    update_preferred_name = models.BooleanField(_('Allow native name to be automatically updated'),
+                                                blank=False, default=True)
 
     class Meta:
         abstract = True

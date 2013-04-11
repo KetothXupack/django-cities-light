@@ -407,9 +407,7 @@ It is possible to force the import of files which weren't downloaded using the
         self.translation_data[model_class][geoname_id][lang].append(items[3])
 
     def preferred_names_import(self):
-        data = getattr(self, 'translation_data', None)
-
-        if not data:
+        if not self.import_preferred_names:
             return
 
         i = 0
