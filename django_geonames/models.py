@@ -75,6 +75,7 @@ class Base(models.Model):
         display_name = getattr(self, 'display_name', None)
         if display_name:
             return display_name
+        # noinspection PyUnresolvedReferences
         return self.name
 
 
@@ -129,6 +130,7 @@ signals.pre_save.connect(set_name_ascii, sender=Region)
 signals.pre_save.connect(set_display_name, sender=Region)
 
 
+# FIXME: to be removed after migrations join
 class ToSearchTextField(models.TextField):
     """
     Trivial TextField subclass that passes values through to_search
