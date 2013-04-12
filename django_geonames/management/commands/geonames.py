@@ -66,8 +66,8 @@ It is possible to force the import of files which weren't downloaded using the
                              help='Download and import if files are up-to-date.'),
         optparse.make_option('--force-import', action='append', default=[],
                              help='Import even if files matching files are up-to-date'),
-        optparse.make_option('--import-preferred-names', action='store_true', default=False,
-                             help='Import names tranlations'),
+        optparse.make_option('--skip-preferred-names', action='store_false', default=True,
+                             help='Skip native names import'),
         optparse.make_option('--force', action='append', default=[],
                              help='Download and import even if matching files are up-to-date'),
         optparse.make_option('--noinsert', action='store_true',
@@ -87,7 +87,7 @@ It is possible to force the import of files which weren't downloaded using the
         translation_hack_path = os.path.join(DATA_DIR, 'translation_hack')
 
         self.noinsert = options.get('noinsert', False)
-        self.import_preferred_names = options.get('import_preferred_names', False)
+        self.import_preferred_names = options.get('skip_preferred_names', True)
         self.widgets = [
             'RAM used: ',
             MemoryUsageWidget(),
