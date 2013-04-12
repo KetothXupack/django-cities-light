@@ -160,7 +160,6 @@ It is possible to force the import of files which weren't downloaded using the
             with open(translation_hack_path, 'r') as f:
                 self.translation_data = pickle.load(f)
 
-        self.logger.info('Importing preferred names in the database')
         self.preferred_names_import()
 
     def _get_country_id(self, code2):
@@ -407,8 +406,10 @@ It is possible to force the import of files which weren't downloaded using the
         self.translation_data[model_class][geoname_id][lang].append(items[3])
 
     def preferred_names_import(self):
-        if not self.import_preferred_names:
+        if not self.import_preferred_names or not hasattr(self, 'preferred_names'):
             return
+
+        logger.info('Importing preferred names in the database')
 
         i = 0
         progress = progressbar.ProgressBar(maxval=len(self.preferred_names), widgets=self.widgets)
