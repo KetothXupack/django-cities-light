@@ -482,9 +482,7 @@ It is possible to force the import of files which weren't downloaded using the
         progress.finish()
 
     def preferred_names_import(self):
-        data = getattr(self, 'translation_data', None)
-
-        if not data:
+        if not self.import_preferred_names:
             return
 
         i = 0
