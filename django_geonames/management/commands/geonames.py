@@ -12,8 +12,6 @@ try:
 except ImportError:
     import pickle
 
-import progressbar
-
 from django.core.management.base import BaseCommand
 from django.db import transaction, reset_queries
 from django.utils.encoding import force_unicode
@@ -24,12 +22,53 @@ from ...models import *
 from ...settings import *
 from ...geonames import Geonames
 
+logger = logging.getLogger('django_geonames')
 
-class MemoryUsageWidget(progressbar.ProgressBarWidget):
-    def update(self, pbar):
-        if sys.platform != 'win32':
-            return '%s kB' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        return '?? kB'
+try:
+    from progressbar import ProgressBar, ProgressBarWidget, ETA, Percentage, Bar
+
+    class MemoryUsageWidget(ProgressBarWidget):
+        def update(self, pbar):
+            if sys.platform != 'win32':
+                return '%s kB' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            return '?? kB'
+
+    widgets = [
+        'RAM used: ',
+        MemoryUsageWidget(),
+        ' ',
+        ETA(),
+        ' Done: ',
+        Percentage(),
+        Bar(),
+    ]
+except ImportError:
+    logger.warn('Progress bar support disabled. Consider installing progressbar package to see fancy import progress')
+
+    class Singleton(type):
+        _instances = {}
+
+        def __call__(cls, *args, **kwargs):
+            if cls not in cls._instances:
+                cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+            return cls._instances[cls]
+
+    class ProgressBar(object):
+        """
+        ProgressBar singleton stub object
+        """
+
+        __metaclass__ = Singleton
+
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __call__(self, *args, **kwargs):
+            return self
+
+        def __getattribute__(self, name):
+            return self
+    widgets = []
 
 
 class Command(BaseCommand):
@@ -57,8 +96,6 @@ It is possible to force the import of files which weren't downloaded using the
     manage.py --force-import cities15000 --force-import country
     '''.strip()
 
-    logger = logging.getLogger('django_geonames')
-
     option_list = BaseCommand.option_list + (
         optparse.make_option('--force-import-all', action='store_true',
                              default=False, help='Import even if files are up-to-date.'),
@@ -81,22 +118,13 @@ It is possible to force the import of files which weren't downloaded using the
     @transaction.commit_on_success
     def handle(self, *args, **options):
         if not os.path.exists(DATA_DIR):
-            self.logger.info('Creating %s' % DATA_DIR)
+            logger.info('Creating %s' % DATA_DIR)
             os.mkdir(DATA_DIR)
 
         translation_hack_path = os.path.join(DATA_DIR, 'translation_hack')
 
         self.noinsert = options.get('noinsert', False)
         self.import_preferred_names = options.get('skip_preferred_names', True)
-        self.widgets = [
-            'RAM used: ',
-            MemoryUsageWidget(),
-            ' ',
-            progressbar.ETA(),
-            ' Done: ',
-            progressbar.Percentage(),
-            progressbar.Bar(),
-        ]
 
         for url in SOURCES:
             destination_file_name = url.split('/')[-1]
@@ -118,18 +146,18 @@ It is possible to force the import of files which weren't downloaded using the
                         force_import = True
 
             if downloaded or force_import:
-                self.logger.info('Importing %s' % destination_file_name)
+                logger.info('Importing %s' % destination_file_name)
 
                 if url in TRANSLATION_SOURCES:
                     if options.get('hack_translations', False):
                         if os.path.exists(translation_hack_path):
-                            self.logger.debug(
+                            logger.debug(
                                 'Using translation parsed data: %s' %
                                 translation_hack_path)
                             continue
 
                 i = 0
-                progress = progressbar.ProgressBar(maxval=geonames.num_lines(), widgets=self.widgets)
+                progress = ProgressBar(maxval=geonames.num_lines(), widgets=widgets)
                 for items in geonames.parse():
                     if url in CITY_SOURCES:
                         self.city_import(items)
@@ -412,7 +440,7 @@ It is possible to force the import of files which weren't downloaded using the
         logger.info('Importing preferred names in the database')
 
         i = 0
-        progress = progressbar.ProgressBar(maxval=len(self.preferred_names), widgets=self.widgets)
+        progress = ProgressBar(maxval=len(self.preferred_names), widgets=widgets)
         for geoname_id, names in self.preferred_names.items():
             if geoname_id in self.country_ids:
                 model_class = Country
