@@ -100,6 +100,10 @@ class Country(Base):
     population = models.IntegerField(null=False, blank=False, default=0)
     languages = models.CharField(_('Comma-separated list of languages'), max_length=150, blank=True)
 
+    phone_code = models.IntegerField(_('Calling code'), null=True, blank=True, default=0)
+    phone_enabled = models.BooleanField(_('Registration using phone is enabled for this entity'),
+                                        null=False, blank=False, default=True)
+
     class Meta:
         verbose_name_plural = _(u'countries')
         #db_table = 'dm_country'

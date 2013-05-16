@@ -2,6 +2,7 @@
 import os
 import logging
 import optparse
+import re
 import sys
 
 if sys.platform != 'win32':
@@ -25,6 +26,8 @@ from ...settings import *
 from ...geonames import Geonames
 
 logger = logging.getLogger('django_geonames')
+
+PHONE_RE = re.compile("\+?(\d+)")
 
 try:
     from progressbar import ProgressBar, ProgressBarWidget, ETA, Percentage, Bar
@@ -75,7 +78,8 @@ except ImportError:
 
 def _process_kwargs(kwargs, **rules):
     """
-    Just a quick and dirty
+    Just a quick and dirty fix for querying/saving objects using different
+    django versions
     """
     if VERSION[0] == 1 and VERSION[1] < 5:
         init_kwargs = deepcopy(kwargs)
@@ -84,6 +88,20 @@ def _process_kwargs(kwargs, **rules):
                 init_kwargs[target] = model_type.objects.get(pk=init_kwargs.pop(source))
         return init_kwargs
     return kwargs
+
+
+def process_phone_code(raw_code):
+    if raw_code.isdigit():
+        return int(raw_code)
+    codes = [c.strip() for c in raw_code.split('and')]
+    result = set()
+    for code in codes:
+        m = PHONE_RE.match(code)
+        if m:
+            result.add(int(m.group(1)))
+    if len(result) == 1:
+        return result.pop()
+    return None
 
 
 class Command(BaseCommand):
@@ -251,6 +269,7 @@ It is possible to force the import of files which weren't downloaded using the
         country.tld = items[9][1:]  # strip the leading dot
         country.currency_code = items[10]
         country.currency_name = items[11]
+        country.phone_code = process_phone_code(items[12])
         country.population = int(items[7])
         country.languages = items[15]
 
