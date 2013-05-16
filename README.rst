@@ -51,13 +51,13 @@ This command is well documented, consult the help with::
 
     ./manage.py help geonames
 
-For preferred name import use::
+You may also wish toi skip preferred names processing to speed up importing::
 
-    ./manage.py help geonames --import-preferred-names
+    ./manage.py help geonames --skip-preferred-names
 
-or::
+You can import these names later using::
 
-    ./manage.py help geonames --force-import=alternateNames --import-preferred-names
+    ./manage.py help geonames --force-import=alternateNames
 
 Resources
 ---------
