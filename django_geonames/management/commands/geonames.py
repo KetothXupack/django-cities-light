@@ -107,6 +107,7 @@ def process_phone_code(raw_code):
 class Command(BaseCommand):
     args = '''
 [--force-all] [--force-import-all \\]
+                              [--skip-preferred-names] \\
                               [--force-import countries.txt cities.txt ...] \\
                               [--force countries.txt cities.txt ...]
     '''.strip()
