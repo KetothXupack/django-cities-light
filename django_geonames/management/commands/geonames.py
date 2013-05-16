@@ -89,7 +89,6 @@ def _process_kwargs(kwargs, **rules):
 class Command(BaseCommand):
     args = '''
 [--force-all] [--force-import-all \\]
-                              [--import-preferred-names] \\
                               [--force-import countries.txt cities.txt ...] \\
                               [--force countries.txt cities.txt ...]
     '''.strip()
