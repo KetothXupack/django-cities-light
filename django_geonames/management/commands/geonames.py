@@ -15,6 +15,8 @@ except ImportError:
 from django.core.management.base import BaseCommand
 from django.db import transaction, reset_queries
 from django.utils.encoding import force_unicode
+from django import VERSION
+from copy import deepcopy
 
 from ...exceptions import *
 from ...signals import *
@@ -69,6 +71,19 @@ except ImportError:
         def __getattribute__(self, name):
             return self
     widgets = []
+
+
+def _process_kwargs(kwargs, **rules):
+    """
+    Just a quick and dirty
+    """
+    if VERSION[0] == 1 and VERSION[1] < 5:
+        init_kwargs = deepcopy(kwargs)
+        for source, (target, model_type) in rules.items():
+            if source in kwargs:
+                init_kwargs[target] = model_type.objects.get(pk=init_kwargs.pop(source))
+        return init_kwargs
+    return kwargs
 
 
 class Command(BaseCommand):
@@ -216,8 +231,9 @@ It is possible to force the import of files which weren't downloaded using the
             self._region_codes[country_id] = {}
 
         if region_id not in self._region_codes[country_id]:
-            self._region_codes[country_id][region_id] = Region.objects.get(
-                country_id=country_id, geoname_code=region_id).pk
+            kwargs = dict(country_id=country_id, geoname_code=region_id)
+            kwargs = _process_kwargs(kwargs, country_id=('country', Country))
+            self._region_codes[country_id][region_id] = Region.objects.get(**kwargs).pk
 
         return self._region_codes[country_id][region_id]
 
@@ -262,8 +278,8 @@ It is possible to force the import of files which weren't downloaded using the
             kwargs = dict(geoname_id=items[3])
         else:
             try:
-                kwargs = dict(name=name,
-                              country_id=country_id)
+                kwargs = dict(name=name, country_id=country_id)
+                kwargs = _process_kwargs(kwargs, country_id=('country', Country))
             except Country.DoesNotExist:
                 if self.noinsert:
                     return
@@ -309,6 +325,7 @@ It is possible to force the import of files which weren't downloaded using the
         try:
             kwargs = dict(name=force_unicode(items[1]),
                           country_id=self._get_country_id(items[8]))
+            kwargs = _process_kwargs(kwargs, country_id=('country', Country))
         except Country.DoesNotExist:
             if self.noinsert:
                 return
@@ -325,7 +342,6 @@ It is possible to force the import of files which weren't downloaded using the
             except City.DoesNotExist:
                 if self.noinsert:
                     return
-
                 city = City(**kwargs)
 
         save = False
