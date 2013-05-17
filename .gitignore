@@ -8,3 +8,4 @@ data
 *.ipr
 *.iws
 *.ids
+*.sqlite
