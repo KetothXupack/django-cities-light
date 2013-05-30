@@ -38,6 +38,7 @@ filter_non_cities()
 import django.dispatch
 
 from exceptions import *
+from .settings import CITY_TYPES
 
 __all__ = ['city_items_pre_import', 'region_items_pre_import',
            'filter_non_cities']
@@ -50,6 +51,6 @@ def filter_non_cities(sender, items, **kwargs):
     """
     Reports non populated places as invalid.
     """
-    if 'PPL' not in items[7]:
+    if items[7] not in CITY_TYPES:
         raise InvalidItems()
 city_items_pre_import.connect(filter_non_cities)

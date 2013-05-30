@@ -76,6 +76,14 @@ except ImportError:
     widgets = []
 
 
+def is_ascii(s):
+    try:
+        s.encode('ascii')
+    except UnicodeDecodeError:
+        return False
+    return True
+
+
 def _process_kwargs(kwargs, **rules):
     """
     Just a quick and dirty fix for querying/saving objects using different
@@ -447,6 +455,15 @@ It is possible to force the import of files which weren't downloaded using the
         if self.import_preferred_names:
             # find preferred lang
             code = self.geoname_codes[geoname_id]
+            if code in ROMANIZED_TO_NATIVE:
+                model = model_class.objects.get(geoname_id=geoname_id)
+                model.preferred_name = model.name
+                model.save()
+                return
+
+            if code in NON_ASCII_LANGUAGES and is_ascii(items[3]):
+                return
+
             if lang in ISO3166_TO_ISO639.values() \
                 and code in ISO3166_TO_ISO639 \
                     and lang == ISO3166_TO_ISO639[code]:

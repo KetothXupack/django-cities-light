@@ -56,7 +56,8 @@ def default(key, val):
 
 __all__ = ['COUNTRY_SOURCES', 'REGION_SOURCES', 'CITY_SOURCES',
            'TRANSLATION_LANGUAGES', 'TRANSLATION_SOURCES', 'SOURCES', 'DATA_DIR',
-           'INDEX_SEARCH_NAMES', 'ISO3166_TO_ISO639']
+           'INDEX_SEARCH_NAMES', 'ISO3166_TO_ISO639', 'CITY_TYPES',
+           'NON_ASCII_LANGUAGES', 'ROMANIZED_TO_NATIVE']
 
 COUNTRY_SOURCES = \
     default('CGEONAMES_COUNTRY_SOURCES', ['http://download.geonames.org/export/dump/countryInfo.txt'])
@@ -65,9 +66,12 @@ REGION_SOURCES = \
 CITY_SOURCES = \
     default('GEONAMES_CITY_SOURCES', ['http://download.geonames.org/export/dump/cities15000.zip'])
 TRANSLATION_SOURCES = \
-    default('CGEONAMES_TRANSLATION_SOURCES', ['http://download.geonames.org/export/dump/alternateNames.zip'])
+    default('GEONAMES_TRANSLATION_SOURCES', ['http://download.geonames.org/export/dump/alternateNames.zip'])
 TRANSLATION_LANGUAGES = \
     default('GEONAMES_TRANSLATION_LANGUAGES', ['es', 'en', 'pt', 'de', 'pl', 'abbr'])
+CITY_TYPES = \
+    default('GEONAMES_CITY_TYPES', ['PPL', 'PPLA', 'PPLC', 'PPLA2', 'PPLA3', 'PPLA4', 'PPLG'])
+
 
 SOURCES = list(COUNTRY_SOURCES) + list(REGION_SOURCES) + list(CITY_SOURCES)
 SOURCES += TRANSLATION_SOURCES
@@ -133,6 +137,11 @@ ISO3166_TO_ISO639 = default('GEONAMES_ISO3166_TO_ISO639', DEFAULT_ISO3166_TO_ISO
 DATA_DIR = getattr(settings, 'GEONAMES_DATA_DIR',
                    os.path.normpath(os.path.join(
                        os.path.dirname(os.path.realpath(__file__)), 'data')))
+
+NON_ASCII_LANGUAGES = default('GEONAMES_NON_ASCII_LANGUAGES',
+                              [k for (k, v) in DEFAULT_ISO3166_TO_ISO639.items() if v != 'en'])
+ROMANIZED_TO_NATIVE = default('GEONAMES_ROMANIZED_TO_NATIVE',
+                              [k for (k, v) in DEFAULT_ISO3166_TO_ISO639.items() if v == 'en'])
 
 # FIXME: to be removed after migrations join
 INDEX_SEARCH_NAMES = False
