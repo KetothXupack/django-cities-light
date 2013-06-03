@@ -68,7 +68,7 @@ class Base(models.Model):
                                                 null=False, blank=False, default=True)
 
     reg_enabled = models.BooleanField(_('Registration is enabled for this entity'),
-                                      null=False, blank=False, default=True)
+                                      null=False, blank=False, default=False)
 
     class Meta:
         abstract = True
@@ -102,7 +102,7 @@ class Country(Base):
 
     phone_code = models.IntegerField(_('Calling code'), null=True, blank=True, default=0)
     phone_enabled = models.BooleanField(_('Registration using phone is enabled for this entity'),
-                                        null=False, blank=False, default=True)
+                                        null=False, blank=False, default=False)
 
     class Meta:
         verbose_name_plural = _(u'countries')
