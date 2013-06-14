@@ -1,5 +1,7 @@
 # coding=utf-8
 import os
+import time
+import urllib
 import logging
 import optparse
 import re
@@ -14,6 +16,7 @@ except ImportError:
     import pickle
 
 from django.core.management.base import BaseCommand
+from django.core.management import call_command
 from django.db import transaction, reset_queries
 from django.utils.encoding import force_unicode
 from django import VERSION
@@ -28,6 +31,8 @@ from ...geonames import Geonames
 logger = logging.getLogger('django_geonames')
 
 PHONE_RE = re.compile("\+?(\d+)")
+
+FIXTURES_URL = 'http://dinect.com/fixtures/'
 
 try:
     from progressbar import ProgressBar, ProgressBarWidget, ETA, Percentage, Bar
@@ -138,6 +143,12 @@ It is possible to force the import of files which weren't downloaded using the
     '''.strip()
 
     option_list = BaseCommand.option_list + (
+        optparse.make_option('--from-geonames', action='store_true',
+                             default=False, help='Import fresh data from geonames.org.'),
+        optparse.make_option('--from-fixtures', action='store_true',
+                             default=False, help='Import data from prebuilt fixtures.'),
+        optparse.make_option('--fetch-fixtures', action='store_true',
+                             default=False, help='Force fetch prebuilt fixtures.'),
         optparse.make_option('--force-import-all', action='store_true',
                              default=False, help='Import even if files are up-to-date.'),
         optparse.make_option('--force-all', action='store_true', default=False,
@@ -162,6 +173,57 @@ It is possible to force the import of files which weren't downloaded using the
             logger.info('Creating %s' % DATA_DIR)
             os.mkdir(DATA_DIR)
 
+        if options.get('from_geonames', False):
+            self.from_geonames(*args, **options)
+        elif options.get('from_fixtures', False):
+            self.from_fixtures(*args, **options)
+        else:
+            print 'Please specify either --from-fixtures or --from-geonames'
+
+    def download(self, url, path, force=False):
+        remote_file = urllib.urlopen(url)
+        remote_time = time.strptime(remote_file.headers['last-modified'],
+                                    '%a, %d %b %Y %H:%M:%S %Z')
+        remote_size = int(remote_file.headers['content-length'])
+
+        if os.path.exists(path) and not force:
+            local_time = time.gmtime(os.path.getmtime(path))
+            local_size = os.path.getsize(path)
+
+            if local_time >= remote_time and local_size == remote_size:
+                logger.warning('Assuming local download is up to date for %s' % url)
+                return False
+
+        logger.info('Downloading %s into %s' % (url, path))
+        with open(path, 'wb') as local_file:
+            chunk = remote_file.read()
+            while chunk:
+                local_file.write(chunk)
+                chunk = remote_file.read()
+
+        return True
+
+    # ./manage.py dumpdata --format=json --indent 1 django_geonames.Country | bzip2 -z9 > django_geonames/data/geonames_country.json.bz2
+    # ./manage.py dumpdata --format=json --indent 1 django_geonames.Region | bzip2 -z9 > django_geonames/data/geonames_region.json.bz2
+    # ./manage.py dumpdata --format=json --indent 1 django_geonames.City | bzip2 -z9 > django_geonames/data/geonames_city.json.bz2
+    def from_fixtures(self, *args, **options):
+        base_url = FIXTURES_URL
+        country_path = os.path.join(DATA_DIR, 'geonames_country.json.bz2')
+        self.download(base_url + 'geonames_country.json.bz2',
+                      country_path, force=options.get('fetch_fixtures', False))
+        call_command('loaddata', *[country_path], **{'database': 'default'})
+
+        region_path = os.path.join(DATA_DIR, 'geonames_region.json.bz2')
+        self.download(base_url + 'geonames_region.json.bz2',
+                      region_path, force=options.get('fetch_fixtures', False))
+        call_command('loaddata', *[region_path], **{'database': 'default'})
+
+        city_path = os.path.join(DATA_DIR, 'geonames_city.json.bz2')
+        self.download(base_url + 'geonames_city.json.bz2',
+                      city_path, force=options.get('fetch_fixtures', False))
+        call_command('loaddata', *[city_path], **{'database': 'default'})
+
+    def from_geonames(self, *args, **options):
         translation_hack_path = os.path.join(DATA_DIR, 'translation_hack')
 
         self.noinsert = options.get('noinsert', False)
