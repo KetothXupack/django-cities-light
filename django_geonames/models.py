@@ -106,7 +106,7 @@ class Country(Base):
 
     class Meta:
         verbose_name_plural = _(u'countries')
-        #db_table = 'dm_country'
+        db_table = 'geonames_country'
 
 
 signals.pre_save.connect(set_name_ascii, sender=Country)
@@ -127,7 +127,7 @@ class Region(Base):
         unique_together = (('country', 'name'), )
         verbose_name = _('region/state')
         verbose_name_plural = _('regions/states')
-        #db_table = 'dm_region'
+        db_table = 'geonames_region'
 
     def get_display_name(self):
         return u'%s, %s' % (self.name, self.country.name)
@@ -174,7 +174,7 @@ class City(Base):
     class Meta:
         unique_together = (('region', 'name'),)
         verbose_name_plural = _(u'cities')
-        #db_table = 'dm_city'
+        db_table = 'geonames_city'
 
     def get_display_name(self):
         if self.region_id:
