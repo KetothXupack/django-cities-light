@@ -60,7 +60,7 @@ __all__ = ['COUNTRY_SOURCES', 'REGION_SOURCES', 'CITY_SOURCES',
            'NON_ASCII_LANGUAGES', 'ROMANIZED_TO_NATIVE']
 
 COUNTRY_SOURCES = \
-    default('CGEONAMES_COUNTRY_SOURCES', ['http://download.geonames.org/export/dump/countryInfo.txt'])
+    default('GEONAMES_COUNTRY_SOURCES', ['http://download.geonames.org/export/dump/countryInfo.txt'])
 REGION_SOURCES = \
     default('GEONAMES_REGION_SOURCES', ['http://download.geonames.org/export/dump/admin1CodesASCII.txt'])
 CITY_SOURCES = \
